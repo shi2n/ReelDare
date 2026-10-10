@@ -76,6 +76,41 @@ function dto(row: typeof experiences.$inferSelect) {
 }
 
 import { RICH_EXPERIENCES } from "@/lib/experiences-catalog";
+import { getRandomChallenge, ChallengeTask } from "@/lib/challenges";
+
+function challengeToExperience(task: ChallengeTask): any {
+  // Convert task ID like shame-0421 or public-0112 into a numeric ID
+  const numericId = task.category === "shameful_acts"
+    ? 100000 + (parseInt(task.id.replace(/\D/g, ""), 10) || 1)
+    : 200000 + (parseInt(task.id.replace(/\D/g, ""), 10) || 1);
+
+  const diffMap: Record<string, number> = {
+    Easy: 1,
+    Medium: 2,
+    Hard: 3,
+    Extreme: 5,
+  };
+
+  return {
+    id: numericId,
+    challengeId: task.id,
+    title: task.title,
+    description: task.description,
+    category: task.category,
+    mood: "crazy",
+    difficulty: diffMap[task.difficulty] || 2,
+    budget: 0,
+    time: task.duration.includes("second") ? "10min" : task.duration.includes("15") ? "30min" : "1hour",
+    energy: task.social_intensity > 6 ? "active" : "normal",
+    location: task.location.toLowerCase(),
+    social: task.category === "public_acts" ? "strangers" : "friends",
+    safety: task.safety_note || "safe",
+    reel: task.reel_potential,
+    completions: 1200 + (parseInt(task.id.replace(/\D/g, ""), 10) % 900),
+    tags: task.tags.join(", "),
+    isChallengeTask: true,
+  };
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -83,6 +118,17 @@ export async function GET(req: NextRequest) {
     const category = sp.get("category");
     const mood = sp.get("mood");
     const rawExclude = sp.get("exclude") || "";
+
+    // If request is explicitly for Shameful Acts or Public Acts, draw directly from the 1,000 tasks
+    if (category === "shameful_acts" || category === "public_acts") {
+      const excludeChallengeIds = rawExclude
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const picked = getRandomChallenge(category, excludeChallengeIds);
+      return NextResponse.json({ experience: challengeToExperience(picked.challenge) });
+    }
     const excludeIds = new Set(
       rawExclude
         .split(",")

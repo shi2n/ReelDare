@@ -264,6 +264,46 @@ export const WHEEL_SEGMENTS: WheelSegment[] = [
       reel: 5,
     },
   },
+  {
+    id: "shameful_acts",
+    label: "Shameful Acts",
+    shortLabel: "SHAMEFUL",
+    category: "shameful_acts",
+    mood: "crazy",
+    color: "#9333ea", // vibrant purple
+    textColor: "#ffffff",
+    icon: Flame,
+    sampleWish: {
+      title: "Dramatic Oscar speech to your bathroom mirror",
+      description: "Deliver a 45-second emotional Oscar acceptance speech to your mirror as if you won Best Actor.",
+      budget: 0,
+      time: "10min",
+      difficulty: 2,
+      social: "alone",
+      location: "home",
+      reel: 5,
+    },
+  },
+  {
+    id: "public_acts",
+    label: "Public Acts",
+    shortLabel: "PUBLIC",
+    category: "public_acts",
+    mood: "crazy",
+    color: "#ea580c", // bold electric orange
+    textColor: "#ffffff",
+    icon: Flame,
+    sampleWish: {
+      title: "Compliment 3 strangers with genuine warmth",
+      description: "Approach 3 different people in public, give each a sincere, hyper-specific compliment, and walk away smiling.",
+      budget: 0,
+      time: "30min",
+      difficulty: 3,
+      social: "strangers",
+      location: "city",
+      reel: 5,
+    },
+  },
 ];
 
 // Web Audio API sound generator for mechanical click & win chime
@@ -448,20 +488,47 @@ export default function SpinWheel({
 
     // Fallback guaranteed non-repeating selection
     if (!resolvedExp) {
-      const { RICH_EXPERIENCES } = await import("@/lib/experiences-catalog");
-      const unusedInCat = RICH_EXPERIENCES.filter(
-        (e) => e.category === targetSegment.category && !seenWishIds.includes(e.id)
-      );
-      const pool =
-        unusedInCat.length > 0
-          ? unusedInCat
-          : RICH_EXPERIENCES.filter((e) => !seenWishIds.includes(e.id));
+      if (targetSegment.category === "shameful_acts" || targetSegment.category === "public_acts") {
+        try {
+          const { getRandomChallenge } = await import("@/lib/challenges");
+          const picked = getRandomChallenge(targetSegment.category as "shameful_acts" | "public_acts");
+          const numId = (targetSegment.category === "shameful_acts" ? 100000 : 200000) + (parseInt(picked.challenge.id.replace(/\D/g, ""), 10) || 1);
+          resolvedExp = {
+            id: numId,
+            title: picked.challenge.title,
+            description: picked.challenge.description,
+            category: picked.challenge.category,
+            mood: "crazy",
+            difficulty: picked.challenge.difficulty === "Extreme" ? 5 : picked.challenge.difficulty === "Hard" ? 3 : 2,
+            budget: 0,
+            time: picked.challenge.duration.includes("second") ? "10min" : "30min",
+            energy: "active",
+            location: picked.challenge.location.toLowerCase(),
+            social: picked.challenge.category === "public_acts" ? "strangers" : "friends",
+            safety: picked.challenge.safety_note || "safe",
+            reel: picked.challenge.reel_potential,
+            completions: 1400,
+            tags: picked.challenge.tags.join(", "),
+          };
+        } catch {}
+      }
 
-      if (pool.length > 0) {
-        resolvedExp = pool[Math.floor(Math.random() * pool.length)];
-      } else {
-        // In the rare event user saw all 53+ catalog wishes, pick any from catalog
-        resolvedExp = RICH_EXPERIENCES[Math.floor(Math.random() * RICH_EXPERIENCES.length)];
+      if (!resolvedExp) {
+        const { RICH_EXPERIENCES } = await import("@/lib/experiences-catalog");
+        const unusedInCat = RICH_EXPERIENCES.filter(
+          (e) => e.category === targetSegment.category && !seenWishIds.includes(e.id)
+        );
+        const pool =
+          unusedInCat.length > 0
+            ? unusedInCat
+            : RICH_EXPERIENCES.filter((e) => !seenWishIds.includes(e.id));
+
+        if (pool.length > 0) {
+          resolvedExp = pool[Math.floor(Math.random() * pool.length)];
+        } else {
+          // In the rare event user saw all 53+ catalog wishes, pick any from catalog
+          resolvedExp = RICH_EXPERIENCES[Math.floor(Math.random() * RICH_EXPERIENCES.length)];
+        }
       }
     }
 
@@ -589,9 +656,100 @@ export default function SpinWheel({
             Select Activity Type To Spin
           </label>
           <span className="text-[11px] text-cream/50">
-            {selectedActivityCategory === "all" ? "Surprise me (All 10 realms)" : `Filtered: ${selectedActivityCategory}`}
+            {selectedActivityCategory === "all"
+              ? "Surprise me (All 12 realms)"
+              : selectedActivityCategory === "shameful_acts"
+              ? "😳 Shameful Acts (1,000 Dares)"
+              : selectedActivityCategory === "public_acts"
+              ? "🔥 Public Acts (1,000 Dares)"
+              : `Filtered: ${selectedActivityCategory}`}
           </span>
         </div>
+
+        {/* Featured Prominent Category Badges for Shameful & Public Acts */}
+        <div className="mb-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() =>
+              setSelectedActivityCategory((prev) =>
+                prev === "shameful_acts" ? "all" : "shameful_acts"
+              )
+            }
+            className={`group relative flex items-center justify-between overflow-hidden rounded-2xl border px-4 py-3 transition-all duration-300 ${
+              selectedActivityCategory === "shameful_acts"
+                ? "border-purple-400 bg-gradient-to-r from-purple-700 via-pink-600 to-rose-600 text-white shadow-[0_8px_25px_rgba(168,85,247,0.45)] ring-2 ring-purple-400"
+                : "border-purple-500/30 bg-purple-950/40 text-purple-200 hover:border-purple-400 hover:bg-purple-900/40"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/20 text-lg shadow-inner">
+                😳
+              </span>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5 font-bold text-sm leading-tight text-white">
+                  Shameful Acts
+                  <span className="rounded-full bg-purple-400/20 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-purple-300 uppercase">
+                    1,000 Dares
+                  </span>
+                </div>
+                <p className="text-[11px] text-purple-200/70">
+                  Can You Handle the Embarrassment?
+                </p>
+              </div>
+            </div>
+            <span
+              className={`rounded-full px-2.5 py-1 text-[11px] font-black uppercase transition-all ${
+                selectedActivityCategory === "shameful_acts"
+                  ? "bg-white text-purple-900"
+                  : "bg-purple-500/20 text-purple-300 group-hover:bg-purple-500/40"
+              }`}
+            >
+              {selectedActivityCategory === "shameful_acts" ? "Active" : "Select"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setSelectedActivityCategory((prev) =>
+                prev === "public_acts" ? "all" : "public_acts"
+              )
+            }
+            className={`group relative flex items-center justify-between overflow-hidden rounded-2xl border px-4 py-3 transition-all duration-300 ${
+              selectedActivityCategory === "public_acts"
+                ? "border-orange-400 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 text-white shadow-[0_8px_25px_rgba(234,88,12,0.45)] ring-2 ring-orange-400"
+                : "border-orange-500/30 bg-orange-950/40 text-orange-200 hover:border-orange-400 hover:bg-orange-900/40"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-500/20 text-lg shadow-inner">
+                🔥
+              </span>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5 font-bold text-sm leading-tight text-white">
+                  Public Acts
+                  <span className="rounded-full bg-orange-400/20 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-orange-300 uppercase">
+                    1,000 Dares
+                  </span>
+                </div>
+                <p className="text-[11px] text-orange-200/70">
+                  Do It in Public. If You Dare.
+                </p>
+              </div>
+            </div>
+            <span
+              className={`rounded-full px-2.5 py-1 text-[11px] font-black uppercase transition-all ${
+                selectedActivityCategory === "public_acts"
+                  ? "bg-white text-orange-900"
+                  : "bg-orange-500/20 text-orange-300 group-hover:bg-orange-500/40"
+              }`}
+            >
+              {selectedActivityCategory === "public_acts" ? "Active" : "Select"}
+            </span>
+          </button>
+        </div>
+
+        {/* Existing Category Filter Pills */}
         <div className="flex flex-wrap gap-1.5 rounded-2xl border border-white/10 bg-white/5 p-2">
           {[
             { id: "all", label: "🎲 All Types" },
