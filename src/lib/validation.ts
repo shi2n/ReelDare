@@ -57,9 +57,12 @@ export const profileUpdateSchema = z.object({
     .max(30)
     .regex(/^[a-zA-Z0-9_-]+$/)
     .optional(),
-  bio: z.string().max(300).optional(),
+  displayName: z.string().trim().max(60).optional(),
+  bio: z.string().max(400).optional(),
   socialLink: z.string().max(300).optional(),
-  avatar: z.string().max(500).optional(),
+  instagram: z.string().trim().max(100).optional(),
+  avatar: z.string().max(3500000).optional(), // Support Base64 Data URL or remote URL (up to ~2.5MB)
+  accentColor: z.string().max(40).optional(),
 });
 
 // 3. XP Award Schema

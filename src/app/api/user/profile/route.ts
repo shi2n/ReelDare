@@ -43,17 +43,31 @@ export async function PATCH(req: NextRequest) {
     if (data.username) {
       updates.username = sanitizeString(data.username.toLowerCase().replace(/\s+/g, "_"), 30);
     }
+    if (data.displayName !== undefined) {
+      updates.displayName = sanitizeString(data.displayName, 60);
+    }
     if (body.email && typeof body.email === "string") {
       updates.email = sanitizeString(body.email.trim().toLowerCase(), 320);
     }
-    if (data.socialLink !== undefined) {
+    if (data.instagram !== undefined) {
+      // Clean instagram handle: remove leading @, full url prefix, spaces
+      let cleanInsta = data.instagram.trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/$/, "");
+      updates.instagram = sanitizeString(cleanInsta, 50);
+      updates.socialLink = cleanInsta ? `https://www.instagram.com/${cleanInsta}/` : "";
+    } else if (data.socialLink !== undefined) {
       updates.socialLink = sanitizeString(data.socialLink, 300);
     }
     if (data.bio !== undefined) {
-      updates.bio = sanitizeString(data.bio, 300);
+      updates.bio = sanitizeString(data.bio, 400);
     }
     if (data.avatar !== undefined) {
-      updates.avatar = sanitizeString(data.avatar, 500);
+      // Allow base64 data image or URL
+      updates.avatar = data.avatar.startsWith("data:image/") || data.avatar.startsWith("http")
+        ? data.avatar
+        : sanitizeString(data.avatar, 3500000);
+    }
+    if (data.accentColor !== undefined) {
+      updates.accentColor = sanitizeString(data.accentColor, 40);
     }
     if (body.preferences !== undefined) {
       updates.preferences = JSON.stringify(body.preferences);

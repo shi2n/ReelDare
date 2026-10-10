@@ -77,10 +77,6 @@ export default function LoginPage() {
       setError("Please provide a valid email address.");
       return;
     }
-    if (!socialLink.trim()) {
-      setError("Please enter your social media profile link (Instagram, X/Twitter, YouTube, etc.).");
-      return;
-    }
     setSignupStep(2);
   };
 
@@ -276,24 +272,23 @@ export default function LoginPage() {
                     </div>
                   </div>
 
-                  {/* Social Media Link */}
+                  {/* Instagram Username */}
                   <div>
                     <label className="block text-xs font-bold tracking-wider text-cream/70 uppercase">
-                      Social Media Profile Link <span className="text-gold">*</span>
+                      Instagram Username <span className="text-cream/40">(Optional)</span>
                     </label>
                     <div className="relative mt-2">
                       <LinkIcon className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-cream/40" />
                       <input
                         type="text"
-                        required
                         value={socialLink}
                         onChange={(e) => setSocialLink(e.target.value)}
-                        placeholder="e.g. instagram.com/aarav or @aarav"
+                        placeholder="@yourusername (e.g. @shaizan)"
                         className="w-full rounded-2xl border border-white/15 bg-white/5 py-3.5 pr-4 pl-11 text-sm text-cream placeholder-cream/40 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
                       />
                     </div>
                     <p className="mt-1.5 text-[11px] text-cream/40">
-                      Shown on your leaderboard rank so fellow adventurers can connect with your memories.
+                      Just enter your handle with or without @. We automatically link to your Instagram profile.
                     </p>
                   </div>
 

@@ -8,11 +8,14 @@ import path from "path";
 export interface BackendUser {
   id: string;
   username: string;
+  displayName?: string;
   email: string;
   passwordHash?: string | null;
   socialLink: string;
+  instagram?: string;
   bio: string;
   avatar?: string;
+  accentColor?: string;
   xp: number;
   completedTasks: number;
   spinsCount: number;

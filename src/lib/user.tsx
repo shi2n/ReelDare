@@ -40,10 +40,13 @@ export interface UserPreferences {
 export interface UserProfile {
   id: string;
   username: string;
+  displayName?: string;
   email: string;
   socialLink: string;
+  instagram?: string;
   avatar?: string;
   bio?: string;
+  accentColor?: string;
   xp: number;
   completedTasks: number;
   spinsCount: number;
