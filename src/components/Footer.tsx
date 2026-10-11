@@ -131,11 +131,11 @@ export default function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 py-7 text-xs font-semibold text-cream/40 sm:flex-row">
           <p>© 2026 Reel Dare. Spin. Film. Live — safely, kindly, legally.</p>
-          <div className="flex items-center gap-5">
-            <Link href="/faq" className="transition-colors hover:text-gold">Privacy</Link>
-            <Link href="/faq" className="transition-colors hover:text-gold">Terms</Link>
-            <Link href="/faq" className="transition-colors hover:text-gold">Safety</Link>
-            <Link href="/faq" className="transition-colors hover:text-gold">Contact</Link>
+          <div className="flex flex-wrap items-center gap-5">
+            <Link href="/terms" className="transition-colors hover:text-gold">Terms</Link>
+            <Link href="/privacy" className="transition-colors hover:text-gold">Privacy</Link>
+            <Link href="/cookies" className="transition-colors hover:text-gold">Cookies</Link>
+            <Link href="/faq" className="transition-colors hover:text-gold">Safety & FAQ</Link>
           </div>
         </div>
       </div>

@@ -41,12 +41,16 @@ export const viewport: Viewport = {
 };
 
 import Providers from "@/components/Providers";
+import CookieBanner from "@/components/CookieBanner";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
       <body className="bg-cream font-sans text-ink antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <CookieBanner />
+        </Providers>
       </body>
     </html>
   );
