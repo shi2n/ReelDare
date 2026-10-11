@@ -11,7 +11,6 @@ import Features from "@/components/Features";
 import Stats from "@/components/Stats";
 import Community from "@/components/Community";
 import BeforeIDie from "@/components/BeforeIDie";
-import Pricing from "@/components/Pricing";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
 import Newsletter from "@/components/Newsletter";
@@ -70,10 +69,9 @@ export default function Home() {
         <Stats />
         <Community />
         <BeforeIDie />
-        {/* Do not show pricing and FAQ after login */}
+        {/* Do not show FAQ after login */}
         {(!isReady || !isLoggedIn) && (
           <>
-            <Pricing />
             <FAQ />
           </>
         )}

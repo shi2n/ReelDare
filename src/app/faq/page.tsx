@@ -50,12 +50,6 @@ export default function FAQPage() {
               >
                 <Dices className="h-4 w-4" /> Try the Spin Wheel
               </Link>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center gap-2 rounded-full border border-ink/20 bg-white px-6 py-3 text-sm font-bold text-ink transition-colors hover:border-gold"
-              >
-                Pricing & Plans
-              </Link>
             </div>
           </div>
         </section>

@@ -41,12 +41,10 @@ const EXPLORE = [
 const PLATFORM = [
   { label: "My Life & The 100", href: "/my-life" },
   { label: "Features & Modes", href: "/features" },
-  { label: "Pricing & Plans", href: "/pricing" },
   { label: "Safety & Ethics", href: "/faq" },
 ];
 const START = [
   { label: "FAQ & Help", href: "/faq" },
-  { label: "Pricing", href: "/pricing" },
   { label: "Get in touch", href: "mailto:hello@reeldare.com" },
 ];
 

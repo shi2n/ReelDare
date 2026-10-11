@@ -12,7 +12,6 @@ const LINKS = [
   { label: "Categories", href: "/categories" },
   { label: "My Life", href: "/my-life" },
   { label: "Community", href: "/community" },
-  { label: "Pricing", href: "/pricing" },
   { label: "FAQ", href: "/faq" },
 ];
 
@@ -22,7 +21,7 @@ export default function Nav() {
   const pathname = usePathname();
   const { user, isLoggedIn, isReady, currentRank } = useUser();
 
-  // Hide sales/marketing links (Pricing & FAQ) once the user is confirmed logged in on client
+  // Hide marketing links (FAQ) once the user is confirmed logged in on client
   const activeLinks = isReady && isLoggedIn
     ? [
         { label: "Spin Wheel", href: "/spin" },
@@ -36,7 +35,6 @@ export default function Nav() {
         { label: "Categories", href: "/categories" },
         { label: "My Life", href: "/my-life" },
         { label: "Community", href: "/community" },
-        { label: "Pricing", href: "/pricing" },
         { label: "FAQ", href: "/faq" },
       ];
 
@@ -44,7 +42,6 @@ export default function Nav() {
     pathname === "/spin" ||
     pathname === "/my-life" ||
     pathname === "/mylife" ||
-    pathname === "/pricing" ||
     pathname === "/features" ||
     pathname === "/profile" ||
     pathname === "/login";
