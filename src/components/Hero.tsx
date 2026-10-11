@@ -134,11 +134,11 @@ export default function Hero() {
           </span>
           <span className="hidden h-4 w-px bg-cream/20 sm:block" />
           <span>
-            <span className="font-display text-xl font-semibold text-gold">1.2M</span> memories made
+            <span className="font-display text-xl font-semibold text-gold">13</span> Life Categories
           </span>
           <span className="hidden h-4 w-px bg-cream/20 sm:block" />
           <span>
-            <span className="font-display text-xl font-semibold text-gold">63</span> countries pinned
+            <span className="font-display text-xl font-semibold text-gold">100%</span> Free to Spin
           </span>
         </motion.div>
       </div>

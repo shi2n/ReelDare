@@ -220,12 +220,6 @@ export default function MyLifePage() {
               <span className="text-xs font-semibold text-purple-300 tracking-wider uppercase">
                 Journal Memories
               </span>
-              <Link
-                href="/community"
-                className="mt-3 text-xs font-bold text-gold transition-colors hover:underline"
-              >
-                View Community
-              </Link>
             </div>
           </div>
         </section>

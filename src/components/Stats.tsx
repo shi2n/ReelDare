@@ -16,16 +16,15 @@ export default function Stats() {
   }, []);
 
   const items = [
-    { value: stats.experiences, suffix: "+", label: "Experiences in the library", sub: "and counting toward 10,000" },
-    { value: stats.completions, suffix: "", label: "Things actually done", sub: "real wishes, completed" },
-    { value: stats.members, suffix: "", label: "Humans collecting memories", sub: "instead of things" },
-    { value: stats.countries, suffix: "", label: "Countries on the life map", sub: "every pin is a memory" },
+    { value: 2053, suffix: "+", label: "Challenges & Dares", sub: "in the verified library" },
+    { value: 13, suffix: "", label: "Life Categories", sub: "from Quiet to Crazy Stunts" },
+    { value: 100, suffix: "%", label: "Free to Spin", sub: "no subscription needed" },
   ];
 
   return (
-    <section className="bg-cream py-20 sm:py-24" aria-label="Community numbers">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
+    <section className="bg-cream py-20 sm:py-24" aria-label="Platform numbers">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-10">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-3">
           {items.map((s, i) => (
             <Reveal key={s.label} delay={i * 0.08} className="text-center">
               <p className="font-display text-5xl font-semibold text-ink sm:text-6xl">

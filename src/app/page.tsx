@@ -9,7 +9,6 @@ import Categories from "@/components/Categories";
 import Modes from "@/components/Modes";
 import Features from "@/components/Features";
 import Stats from "@/components/Stats";
-import Community from "@/components/Community";
 import BeforeIDie from "@/components/BeforeIDie";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
@@ -67,7 +66,6 @@ export default function Home() {
         <Modes />
         <Features />
         <Stats />
-        <Community />
         <BeforeIDie />
         {/* Do not show FAQ after login */}
         {(!isReady || !isLoggedIn) && (

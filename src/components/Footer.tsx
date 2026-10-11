@@ -35,7 +35,6 @@ function IconMail({ className }: { className?: string }) {
 const EXPLORE = [
   { label: "Spin the Wheel", href: "/spin" },
   { label: "Browse Categories", href: "/categories" },
-  { label: "Community Memories", href: "/community" },
   { label: "Before I Die...", href: "/my-life" },
 ];
 const PLATFORM = [

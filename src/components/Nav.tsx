@@ -11,7 +11,6 @@ const LINKS = [
   { label: "Spin Wheel", href: "/spin" },
   { label: "Categories", href: "/categories" },
   { label: "My Life", href: "/my-life" },
-  { label: "Community", href: "/community" },
   { label: "FAQ", href: "/faq" },
 ];
 
@@ -27,14 +26,12 @@ export default function Nav() {
         { label: "Spin Wheel", href: "/spin" },
         { label: "Categories", href: "/categories" },
         { label: "My Life", href: "/my-life" },
-        { label: "Community", href: "/community" },
         { label: "My Profile", href: "/profile" },
       ]
     : [
         { label: "Spin Wheel", href: "/spin" },
         { label: "Categories", href: "/categories" },
         { label: "My Life", href: "/my-life" },
-        { label: "Community", href: "/community" },
         { label: "FAQ", href: "/faq" },
       ];
 
