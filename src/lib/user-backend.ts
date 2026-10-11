@@ -1,6 +1,5 @@
 import { db, hasDb, pool } from "@/db";
 import { users, evidences, customWishes } from "@/db/schema";
-import { supabase, hasSupabase } from "@/db/supabase";
 import { eq, desc, or } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
@@ -141,31 +140,9 @@ async function ensureDbTables() {
 // ---------------- USER OPERATIONS ----------------
 
 export async function findUserById(id: string): Promise<BackendUser | null> {
-  // 1. Try Supabase REST Client
-  if (hasSupabase && supabase) {
-    try {
-      const { data, error } = await supabase.from("users").select("*").eq("id", id).maybeSingle();
-      if (data && !error) {
-        return {
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          passwordHash: data.password_hash,
-          socialLink: data.social_link || "",
-          bio: data.bio || "",
-          avatar: data.avatar ?? undefined,
-          xp: Number(data.xp) || 0,
-          completedTasks: Number(data.completed_tasks) || 0,
-          spinsCount: Number(data.spins_count) || 0,
-          preferences: data.preferences,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-        };
-      }
-    } catch {}
-  }
+    
 
-  // 2. Try direct PostgreSQL / Drizzle
+  // 1. Try direct PostgreSQL / Drizzle
   if (hasDb) {
     try {
       await ensureDbTables();
@@ -197,35 +174,9 @@ export async function findUserById(id: string): Promise<BackendUser | null> {
 export async function findUserByEmailOrUsername(identifier: string): Promise<BackendUser | null> {
   const clean = identifier.trim().toLowerCase();
 
-  // 1. Try Supabase REST Client
-  if (hasSupabase && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .or(`email.eq.${clean},username.eq.${clean}`)
-        .maybeSingle();
-      if (data && !error) {
-        return {
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          passwordHash: data.password_hash,
-          socialLink: data.social_link || "",
-          bio: data.bio || "",
-          avatar: data.avatar ?? undefined,
-          xp: Number(data.xp) || 0,
-          completedTasks: Number(data.completed_tasks) || 0,
-          spinsCount: Number(data.spins_count) || 0,
-          preferences: data.preferences,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-        };
-      }
-    } catch {}
-  }
+    
 
-  // 2. Try direct PostgreSQL / Drizzle
+  // 1. Try direct PostgreSQL / Drizzle
   if (hasDb) {
     try {
       await ensureDbTables();
@@ -290,28 +241,7 @@ export async function createBackendUser(data: {
     updatedAt: now,
   };
 
-  // 1. Sync to Supabase
-  if (hasSupabase && supabase) {
-    try {
-      await supabase.from("users").insert({
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
-        password_hash: newUser.passwordHash,
-        social_link: newUser.socialLink,
-        bio: newUser.bio,
-        avatar: newUser.avatar,
-        xp: newUser.xp,
-        completed_tasks: newUser.completedTasks,
-        spins_count: newUser.spinsCount,
-        preferences: newUser.preferences,
-        created_at: newUser.createdAt,
-        updated_at: newUser.updatedAt,
-      });
-    } catch (e) {
-      console.warn("Supabase user insert fallback:", e);
-    }
-  }
+    
 
   // 2. Sync to Postgres / Drizzle if available
   if (hasDb) {
@@ -354,24 +284,7 @@ export async function updateBackendUser(
     updatedAt: now,
   };
 
-  // 1. Sync to Supabase
-  if (hasSupabase && supabase) {
-    try {
-      const payload: any = { updated_at: now };
-      if (updates.username !== undefined) payload.username = updates.username;
-      if (updates.email !== undefined) payload.email = updates.email;
-      if (updates.socialLink !== undefined) payload.social_link = updates.socialLink;
-      if (updates.bio !== undefined) payload.bio = updates.bio;
-      if (updates.avatar !== undefined) payload.avatar = updates.avatar;
-      if (updates.xp !== undefined) payload.xp = updates.xp;
-      if (updates.completedTasks !== undefined) payload.completed_tasks = updates.completedTasks;
-      if (updates.spinsCount !== undefined) payload.spins_count = updates.spinsCount;
-      if (updates.preferences !== undefined) payload.preferences = updates.preferences;
-      await supabase.from("users").update(payload).eq("id", id);
-    } catch (e) {
-      console.warn("Supabase user update fallback:", e);
-    }
-  }
+    
 
   // 2. Sync to Postgres / Drizzle
   if (hasDb) {
@@ -432,26 +345,7 @@ export async function addBackendEvidence(data: {
     submittedAt: now,
   };
 
-  // 1. Sync to Supabase
-  if (hasSupabase && supabase) {
-    try {
-      await supabase.from("evidences").insert({
-        id: newEv.id,
-        user_id: newEv.userId,
-        exp_id: newEv.expId,
-        exp_title: newEv.expTitle,
-        category: newEv.category,
-        what_you_did: newEv.whatYouDid,
-        time_spent: newEv.timeSpent,
-        completed_date: newEv.completedDate,
-        evidence_link: newEv.evidenceLink,
-        xp_earned: newEv.xpEarned,
-        submitted_at: newEv.submittedAt,
-      });
-    } catch (e) {
-      console.warn("Supabase evidence insert fallback:", e);
-    }
-  }
+    
 
   // 2. Sync to Postgres / Drizzle
   if (hasDb) {
@@ -490,33 +384,9 @@ export async function addBackendEvidence(data: {
 }
 
 export async function getUserEvidences(userId: string): Promise<BackendEvidence[]> {
-  // 1. Try Supabase
-  if (hasSupabase && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("evidences")
-        .select("*")
-        .eq("user_id", userId)
-        .order("submitted_at", { ascending: false });
-      if (data && !error && data.length > 0) {
-        return data.map((r: any) => ({
-          id: r.id,
-          userId: r.user_id,
-          expId: r.exp_id,
-          expTitle: r.exp_title,
-          category: r.category,
-          whatYouDid: r.what_you_did,
-          timeSpent: r.time_spent,
-          completedDate: r.completed_date,
-          evidenceLink: r.evidence_link,
-          xpEarned: Number(r.xp_earned) || 0,
-          submittedAt: r.submitted_at,
-        }));
-      }
-    } catch {}
-  }
+    
 
-  // 2. Try Postgres / Drizzle
+  // 1. Try Postgres / Drizzle
   if (hasDb) {
     try {
       await ensureDbTables();
@@ -549,28 +419,9 @@ export async function getUserEvidences(userId: string): Promise<BackendEvidence[
 // ---------------- CUSTOM WISHES OPERATIONS ----------------
 
 export async function getUserCustomWishes(userId: string): Promise<BackendCustomWish[]> {
-  // 1. Try Supabase
-  if (hasSupabase && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("custom_wishes")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-      if (data && !error && data.length > 0) {
-        return data.map((w: any) => ({
-          id: w.id,
-          userId: w.user_id,
-          title: w.title,
-          category: w.category || "Personal",
-          completed: Boolean(w.completed),
-          createdAt: w.created_at,
-        }));
-      }
-    } catch {}
-  }
+    
 
-  // 2. Try Postgres / Drizzle
+  // 1. Try Postgres / Drizzle
   if (hasDb) {
     try {
       await ensureDbTables();
@@ -612,21 +463,7 @@ export async function addBackendCustomWish(data: {
     createdAt: now,
   };
 
-  // 1. Sync to Supabase
-  if (hasSupabase && supabase) {
-    try {
-      await supabase.from("custom_wishes").insert({
-        id: item.id,
-        user_id: item.userId,
-        title: item.title,
-        category: item.category,
-        completed: item.completed,
-        created_at: item.createdAt,
-      });
-    } catch (e) {
-      console.warn("Supabase wish insert fallback:", e);
-    }
-  }
+    
 
   // 2. Sync to Postgres / Drizzle
   if (hasDb) {
@@ -653,12 +490,7 @@ export async function toggleBackendCustomWish(wishId: string): Promise<BackendCu
   const existing = memoryStore.wishes.find((w) => w.id === wishId);
   const nextCompleted = existing ? !existing.completed : true;
 
-  // 1. Sync to Supabase
-  if (hasSupabase && supabase) {
-    try {
-      await supabase.from("custom_wishes").update({ completed: nextCompleted }).eq("id", wishId);
-    } catch (e) {}
-  }
+    
 
   // 2. Sync to Postgres / Drizzle
   if (hasDb) {
@@ -682,12 +514,7 @@ export async function toggleBackendCustomWish(wishId: string): Promise<BackendCu
 }
 
 export async function deleteBackendCustomWish(wishId: string): Promise<boolean> {
-  // 1. Sync to Supabase
-  if (hasSupabase && supabase) {
-    try {
-      await supabase.from("custom_wishes").delete().eq("id", wishId);
-    } catch (e) {}
-  }
+    
 
   // 2. Sync to Postgres / Drizzle
   if (hasDb) {
@@ -711,34 +538,9 @@ export async function deleteBackendCustomWish(wishId: string): Promise<boolean> 
 // ---------------- GLOBAL LEADERBOARD ----------------
 
 export async function getBackendLeaderboard(limit: number = 20): Promise<BackendUser[]> {
-  // 1. Try Supabase
-  if (hasSupabase && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .order("xp", { ascending: false })
-        .limit(limit);
-      if (data && !error && data.length > 0) {
-        return data.map((u: any) => ({
-          id: u.id,
-          username: u.username,
-          email: u.email,
-          socialLink: u.social_link || "",
-          bio: u.bio || "",
-          avatar: u.avatar || undefined,
-          xp: Number(u.xp) || 0,
-          completedTasks: Number(u.completed_tasks) || 0,
-          spinsCount: Number(u.spins_count) || 0,
-          preferences: u.preferences,
-          createdAt: u.created_at,
-          updatedAt: u.updated_at,
-        }));
-      }
-    } catch {}
-  }
+    
 
-  // 2. Try Postgres / Drizzle
+  // 1. Try Postgres / Drizzle
   if (hasDb) {
     try {
       await ensureDbTables();
@@ -774,33 +576,9 @@ export async function getBackendLeaderboard(limit: number = 20): Promise<Backend
 // ---------------- ADMIN MANAGEMENT OPERATIONS ----------------
 
 export async function getAllUsersAdmin(): Promise<BackendUser[]> {
-  // 1. Try Supabase
-  if (hasSupabase && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (data && !error && data.length > 0) {
-        return data.map((u: any) => ({
-          id: u.id,
-          username: u.username,
-          email: u.email,
-          socialLink: u.social_link || "",
-          bio: u.bio || "",
-          avatar: u.avatar ?? undefined,
-          xp: Number(u.xp) || 0,
-          completedTasks: Number(u.completed_tasks) || 0,
-          spinsCount: Number(u.spins_count) || 0,
-          preferences: u.preferences,
-          createdAt: u.created_at,
-          updatedAt: u.updated_at,
-        }));
-      }
-    } catch {}
-  }
+    
 
-  // 2. Try Postgres
+  // 1. Try Postgres
   if (hasDb) {
     try {
       await ensureDbTables();
@@ -830,29 +608,7 @@ export async function getAllUsersAdmin(): Promise<BackendUser[]> {
 }
 
 export async function getAllEvidencesAdmin(): Promise<BackendEvidence[]> {
-  if (hasSupabase && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("evidences")
-        .select("*")
-        .order("submitted_at", { ascending: false });
-      if (data && !error && data.length > 0) {
-        return data.map((r: any) => ({
-          id: r.id,
-          userId: r.user_id,
-          expId: r.exp_id,
-          expTitle: r.exp_title,
-          category: r.category,
-          whatYouDid: r.what_you_did,
-          timeSpent: r.time_spent,
-          completedDate: r.completed_date,
-          evidenceLink: r.evidence_link,
-          xpEarned: Number(r.xp_earned) || 0,
-          submittedAt: r.submitted_at,
-        }));
-      }
-    } catch {}
-  }
+  
 
   if (hasDb) {
     try {
@@ -880,24 +636,7 @@ export async function getAllEvidencesAdmin(): Promise<BackendEvidence[]> {
 }
 
 export async function getAllWishesAdmin(): Promise<BackendCustomWish[]> {
-  if (hasSupabase && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("custom_wishes")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (data && !error && data.length > 0) {
-        return data.map((w: any) => ({
-          id: w.id,
-          userId: w.user_id,
-          title: w.title,
-          category: w.category || "Personal",
-          completed: Boolean(w.completed),
-          createdAt: w.created_at,
-        }));
-      }
-    } catch {}
-  }
+  
 
   if (hasDb) {
     try {
@@ -920,15 +659,7 @@ export async function getAllWishesAdmin(): Promise<BackendCustomWish[]> {
 }
 
 export async function deleteBackendUser(userId: string): Promise<boolean> {
-  if (hasSupabase && supabase) {
-    try {
-      await supabase.from("custom_wishes").delete().eq("user_id", userId);
-      await supabase.from("evidences").delete().eq("user_id", userId);
-      await supabase.from("users").delete().eq("id", userId);
-    } catch (e) {
-      console.warn("Supabase user delete fallback:", e);
-    }
-  }
+  
 
   if (hasDb) {
     try {
