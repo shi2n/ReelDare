@@ -10,8 +10,16 @@ import {
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+const rawApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "";
+export const isFirebaseConfigured = Boolean(
+  rawApiKey &&
+  rawApiKey.trim() !== "" &&
+  !rawApiKey.includes("<") &&
+  !rawApiKey.includes("YOUR_")
+);
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
+  apiKey: rawApiKey,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "reeldare-dd6b8.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "reeldare-dd6b8",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "reeldare-dd6b8.firebasestorage.app",
@@ -19,16 +27,20 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 };
 
-// Initialize Firebase once
-export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Initialize Firebase app safely
+export const app = isFirebaseConfigured
+  ? getApps().length > 0
+    ? getApp()
+    : initializeApp(firebaseConfig)
+  : null;
 
-// Initialize Firebase Authentication
-export const auth = getAuth(app);
+// Initialize Firebase Authentication safely
+export const auth = app ? getAuth(app) : null;
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
-// Initialize Cloud Firestore
-export const db = getFirestore(app);
+// Initialize Cloud Firestore safely
+export const db = app ? getFirestore(app) : null;
 
 export {
   signInWithPopup,
