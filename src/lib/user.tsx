@@ -74,10 +74,12 @@ interface UserContextType {
   xpProgressPercent: number;
   recentAward: XpAwardEvent | null;
   clearRecentAward: () => void;
-  login: (emailOrUsername: string) => Promise<boolean> | boolean;
+  login: (emailOrUsername: string, password?: string) => Promise<boolean> | boolean;
+  signInWithGoogle: () => Promise<boolean>;
   register: (data: {
     username: string;
     email: string;
+    password?: string;
     socialLink: string;
     bio?: string;
     preferences?: UserPreferences;
@@ -162,15 +164,56 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   };
 
-  const login = async (emailOrUsername: string): Promise<boolean> => {
+  const login = async (emailOrUsername: string, password?: string): Promise<boolean> => {
     const needle = emailOrUsername.trim().toLowerCase();
     if (!needle) return false;
+
+    // 1. If Firebase credentials provided and email looks valid, attempt Firebase Auth
+    if (password && needle.includes("@") && process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+      try {
+        const { auth, signInWithEmailAndPassword, db } = await import("@/lib/firebase");
+        const userCredential = await signInWithEmailAndPassword(auth, needle, password);
+        const fbUser = userCredential.user;
+
+        // Fetch user data from Firestore
+        let profileData: Partial<UserProfile> = {};
+        try {
+          const { doc, getDoc } = await import("firebase/firestore");
+          const snap = await getDoc(doc(db, "users", fbUser.uid));
+          if (snap.exists()) {
+            profileData = snap.data() as Partial<UserProfile>;
+          }
+        } catch {}
+
+        const mappedUser: UserProfile = {
+          id: fbUser.uid,
+          username: profileData.username || fbUser.displayName?.replace(/\s+/g, "_").toLowerCase() || needle.split("@")[0],
+          email: fbUser.email || needle,
+          displayName: profileData.displayName || fbUser.displayName || undefined,
+          avatar: profileData.avatar || fbUser.photoURL || undefined,
+          socialLink: profileData.socialLink || "",
+          bio: profileData.bio || "Live more. Regret nothing.",
+          xp: profileData.xp || 150,
+          completedTasks: profileData.completedTasks || 0,
+          spinsCount: profileData.spinsCount || 0,
+          createdAt: profileData.createdAt || new Date().toISOString(),
+          preferences: profileData.preferences,
+          completedEvidences: profileData.completedEvidences || [],
+        };
+
+        saveUser(mappedUser);
+        return true;
+      } catch (fbErr) {
+        console.warn("Firebase email login error:", fbErr);
+        // If password was wrong or auth failed, propagate or fallback
+      }
+    }
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: needle }),
+        body: JSON.stringify({ identifier: needle, password }),
       });
       const data = await res.json();
       if (res.ok && data?.user) {
@@ -188,15 +231,123 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const signInWithGoogle = async (): Promise<boolean> => {
+    try {
+      const { auth, googleProvider, signInWithPopup, db } = await import("@/lib/firebase");
+      const res = await signInWithPopup(auth, googleProvider);
+      const fbUser = res.user;
+
+      let profileData: Partial<UserProfile> = {};
+      try {
+        const { doc, getDoc, setDoc } = await import("firebase/firestore");
+        const docRef = doc(db, "users", fbUser.uid);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          profileData = snap.data() as Partial<UserProfile>;
+        } else {
+          // Initialize new profile document in Firestore
+          profileData = {
+            id: fbUser.uid,
+            username: (fbUser.displayName || fbUser.email?.split("@")[0] || "explorer")
+              .toLowerCase()
+              .replace(/[^a-z0-9_]/g, "_"),
+            displayName: fbUser.displayName || undefined,
+            email: fbUser.email || "",
+            avatar: fbUser.photoURL || undefined,
+            socialLink: "",
+            bio: "Live more. Regret nothing.",
+            xp: 150,
+            completedTasks: 0,
+            spinsCount: 0,
+            createdAt: new Date().toISOString(),
+          };
+          await setDoc(docRef, profileData, { merge: true });
+        }
+      } catch (fsErr) {
+        console.warn("Firestore profile sync notice:", fsErr);
+      }
+
+      const mappedUser: UserProfile = {
+        id: fbUser.uid,
+        username: profileData.username || fbUser.email?.split("@")[0] || "explorer",
+        displayName: fbUser.displayName || profileData.displayName,
+        email: fbUser.email || "",
+        avatar: fbUser.photoURL || profileData.avatar,
+        socialLink: profileData.socialLink || "",
+        bio: profileData.bio || "Live more. Regret nothing.",
+        xp: profileData.xp ?? 150,
+        completedTasks: profileData.completedTasks ?? 0,
+        spinsCount: profileData.spinsCount ?? 0,
+        createdAt: profileData.createdAt || new Date().toISOString(),
+        preferences: profileData.preferences,
+        completedEvidences: profileData.completedEvidences || [],
+      };
+
+      saveUser(mappedUser);
+      return true;
+    } catch (err: any) {
+      console.error("Google Sign-In failed:", err);
+      throw err;
+    }
+  };
+
   const register = async (data: {
     username: string;
     email: string;
+    password?: string;
     socialLink: string;
     bio?: string;
     preferences?: UserPreferences;
   }) => {
     const cleanUsername = data.username.trim().toLowerCase().replace(/\s+/g, "_");
     const cleanEmail = data.email.trim();
+
+    // 1. If password provided, register with Firebase Auth & save to Firestore
+    if (data.password && process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+      try {
+        const { auth, createUserWithEmailAndPassword, updateProfile: fbUpdateProfile, db } = await import("@/lib/firebase");
+        const cred = await createUserWithEmailAndPassword(auth, cleanEmail, data.password);
+        const fbUser = cred.user;
+
+        await fbUpdateProfile(fbUser, { displayName: data.username });
+
+        const newUser: UserProfile = {
+          id: fbUser.uid,
+          username: cleanUsername,
+          displayName: data.username,
+          email: cleanEmail,
+          socialLink: data.socialLink.trim(),
+          bio: data.bio || "Live more. Regret nothing.",
+          xp: 150,
+          completedTasks: 0,
+          spinsCount: 0,
+          createdAt: new Date().toISOString(),
+          preferences: data.preferences,
+          completedEvidences: [],
+        };
+
+        try {
+          const { doc, setDoc } = await import("firebase/firestore");
+          await setDoc(doc(db, "users", fbUser.uid), newUser, { merge: true });
+        } catch (fsErr) {
+          console.warn("Firestore user creation notice:", fsErr);
+        }
+
+        saveUser(newUser);
+
+        setRecentAward({
+          amount: 150,
+          reason: "Welcome Explorer Bonus! Profile & preferences created.",
+          newTotalXp: 150,
+          leveledUp: false,
+          timestamp: Date.now(),
+        });
+        return;
+      } catch (fbErr) {
+        console.warn("Firebase registration error:", fbErr);
+        throw fbErr;
+      }
+    }
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -250,6 +401,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    import("@/lib/firebase")
+      .then(({ auth, signOut }) => signOut(auth))
+      .catch(() => {});
     fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     saveUser(null);
   };
@@ -258,6 +412,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     const updated = { ...user, ...data };
     saveUser(updated);
+
+    // Sync to Firestore if Firebase is initialized
+    if (user.id) {
+      import("@/lib/firebase")
+        .then(({ db }) => import("firebase/firestore").then(({ doc, setDoc }) => {
+          setDoc(doc(db, "users", user.id), data, { merge: true }).catch(() => {});
+        }))
+        .catch(() => {});
+    }
 
     // Sync to backend
     fetch("/api/user/profile", {
@@ -413,6 +576,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         recentAward,
         clearRecentAward,
         login,
+        signInWithGoogle,
         register,
         logout,
         updateProfile,
